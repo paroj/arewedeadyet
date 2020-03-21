@@ -1,202 +1,294 @@
-<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
-<p>The following charts are based on live data from <a
-        href="https://github.com/pomber/covid19">https://github.com/pomber/covid19</a></p>
-<p>
-    I am quite frustrated with corona graphs in the news, since most reporters seem to have skipped math classes back
-    then.
-    For instance, just plotting the number of confirmed infections at the respective dates does not tell you anything
-    due to the different time point of outbreak. So lets fix that first.
-</p>
-<div>
-    Countries to compare
-    <input type="text" id="countries" value="Korea, South; Germany; Italy; China">
-    <input type="button" value="Apply" onclick="refresh()">
-</div>
-<canvas id="confirmed"></canvas>
-<p>This is still pretty useless as the countries differ in total population and population density, lets turn to
-    something
-    actually comparable:</p>
-<canvas id="rate"></canvas>
-<p>Note that an infection rate of 1.0 means no new infections. Also the values are smoothed using a moving average over
-    four
-    days.
-    This numbers actually allow comparing how well the different countries are doing in their corona
-    countermeasurements, regardless of the population size.
-</p>
-<p>
-    To close with something positive, lets look at the absolute number of infections. That is, cases which are neither
-    recovered nor died yet and are potentially infectious.
-    If there are no such cases left, we can assume the epidemic to be stopped.
-</p>
-<canvas id="recovery"></canvas>
-<p>
-    Notably, when this graph reaches zero you
-    <strong>can
-        not</strong> assume that the epidemic is stopped due to the stochastic nature of the data.
-    However, a rise of the graph after a decline can indicate that a second wave is coming.
-</p>
-<hr>
-<a href="https://github.com/paroj/arewedeadyet">https://github.com/paroj/arewedeadyet</a><br>
-<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License"
-        style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br />This work is
-licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons
-    Attribution-NonCommercial-ShareAlike 4.0 International License</a>.
-<script>
-    "use strict"
+<!doctype html>
+<html lang="en">
 
-    var labels = []
-    var days = {}
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Are we dead yet?</title>
+</head>
 
-    function getDays(data, country) {
-        var confirmed = []
-        for (var day of data[country]) {
-            if (day["confirmed"] < 25) continue
-            confirmed.push(day["confirmed"])
+<body class="container">
+    <div class="jumbotron">
+        <p class="lead">
+            I am quite frustrated with corona graphs in the news, since most reporters seem to have skipped math classes
+            back
+            then.
+            For instance, just plotting the number of confirmed infections at the respective dates does not tell you
+            anything
+            due to the different time point of outbreak. So lets fix that first.
+        </p>
+        <hr>
+        <p>The following charts are based on live data from <a
+                href="https://github.com/pomber/covid19">https://github.com/pomber/covid19</a>, which in turn sources <a
+                href="https://coronavirus.jhu.edu/map.html">jhu.edu</a>.</p>
+        <p>
+    </div>
 
-            if (confirmed.length > labels.length) labels.push(labels.length)
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text" id="basic-addon1">Countries to compare</span>
+        </div>
+        <input type="text" id="countries" value="Korea, South; Germany; Italy; China" class="form-control">
+        <div class="input-group-append">
+            <input type="button" value="Apply" onclick="refresh()" class="btn btn-primary">
+        </div>
+    </div>
+    <div class="card mt-3">
+        <div class="card-body">
+            <canvas id="confirmed"></canvas>
+            This is still pretty useless as the countries differ in total population and population density, lets
+            turn to
+            something
+            actually comparable.
+        </div>
+    </div>
+    <div class="card mt-3">
+        <div class="card-body">
+            <canvas id="rate"></canvas>
+            <p class="card-text">
+                The values are smoothed using a moving
+                average
+                over
+                four days.
+                This numbers actually allow comparing how well the different countries are doing in their corona
+                countermeasurements, regardless of the population size.</p>
+            <div class="alert alert-primary" role="alert">An infection rate of 1.0 means no new infections.
+            </div>
+        </div>
+    </div>
+    <div class="card mt-3">
+        <div class="card-body">
+            However, <em>confirmed</em> does not mean the same between different countries and even in the same country
+            at
+            different time points of the epidemic. This is due to the sampling bias induced by the limited amount of
+            corona
+            test
+            kits.
+            In the early days of the epidemic there are enough kits to test everyone, so many cases that do not yet show
+            symptoms are tested.
+            With ongoing spread, we hit limits on test-kit and health-system capacities and the focus shifts to testing
+            severe
+            cases only.
+            This in turn pushes the mortality rate.
+            <canvas id="mortality"></canvas>
+            <p class="card-text">
+                A significant increase of the mortality rate indicates that
+                <ol>
+                    <li>the confirmed count is being under-estimated.</li>
+                    <li>the health-system capacites being exhausted.</li>
+                </ol>
+            </p>
+            <div class="alert alert-primary" role="alert">
+                We are only talking about an <em>estimate</em> of mortality here as we cannot measure the true
+                mortality
+                rate while the epidemic is ongoing. For us the relative rate between countries is sufficient. Therefore
+                we
+                simpliy
+                chose the optimisitic deaths by confirmed ratio here.
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="card mt-3">
+        <div class="card-body">
+            To close with something positive, lets look at the absolute number of infections. That is, cases which are
+            neither
+            recovered nor died yet and are potentially infectious.
+            If there are no such cases left, we can assume the epidemic to be stopped.
+
+            <canvas id="recovery"></canvas>
+
+
+            Notably, when this graph reaches zero you
+            <strong>can
+                not</strong> assume that the epidemic is stopped due to the stochastic nature of the data.
+            However, a rise of the graph after a decline can indicate that a second wave is coming.
+        </div>
+    </div>
+    <hr>
+    Source-code: <a href="https://github.com/paroj/arewedeadyet">https://github.com/paroj/arewedeadyet</a><br>
+    <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License"
+            style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br />This work is
+    licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons
+        Attribution-NonCommercial-ShareAlike 4.0 International License</a>.
+    <script>
+        "use strict"
+
+        var labels = []
+        var days = {}
+
+        function getDays(data, country) {
+            var confirmed = []
+            for (var day of data[country]) {
+                if (day["confirmed"] < 25) continue
+                confirmed.push(day["confirmed"])
+
+                if (confirmed.length > labels.length) labels.push(labels.length)
+            }
+            days[country] = confirmed
+            return confirmed
         }
-        days[country] = confirmed
-        return confirmed
-    }
 
-    function getInfected(data, country) {
-        var infected = []
-        for (var day of data[country]) {
-            if (day["confirmed"] < 25) continue
-            infected.push(day["confirmed"] - day["deaths"] - day["recovered"])
-        }
-        return infected
-    }
-
-
-    function getRate(data, country) {
-        var confirmed = days[country]
-        var rate = [0]
-        for (var i = 1; i < confirmed.length; i++) {
-            rate.push((confirmed[i] / confirmed[i - 1]))
+        function getInfected(data, country) {
+            var infected = []
+            for (var day of data[country]) {
+                if (day["confirmed"] < 25) continue
+                infected.push(day["confirmed"] - day["deaths"] - day["recovered"])
+            }
+            return infected
         }
 
-        var avgd = [0, 0, 0, 0, 0]
-        for (var i = 4; i < rate.length; i++) {
-            avgd.push(((rate[i] + rate[i - 1] + rate[i - 2] + rate[i - 3]) / 4).toFixed(2))
+        function getMortality(data, country) {
+            var mortality = []
+            for (var day of data[country]) {
+                if (day["confirmed"] < 25) continue
+                mortality.push((day["deaths"] / day["confirmed"] * 100).toFixed(2))
+            }
+            return mortality
         }
 
-        return avgd
-    }
 
-    function getDatasets(data, fn, countries, fill) {
-        var colors = ['rgb(255, 132, 255)', 'rgb(255, 99, 132)', 'rgb(99, 255, 132)', 'rgb(99, 132, 255)', 'rgb(132, 255, 255)', 'rgb(255, 255, 132)']
-        var datasets = []
+        function getRate(data, country) {
+            var confirmed = days[country]
+            var rate = [0]
+            for (var i = 1; i < confirmed.length; i++) {
+                rate.push((confirmed[i] / confirmed[i - 1]))
+            }
 
-        for (var i = 0; i < countries.length; i++) {
-            datasets.push(
-                {
-                    label: countries[i],
-                    fill: fill,
-                    backgroundColor: colors[i],
-                    borderColor: colors[i],
-                    data: fn(data, countries[i])
-                }
-            )
+            var avgd = [0, 0, 0, 0, 0]
+            for (var i = 4; i < rate.length; i++) {
+                avgd.push(((rate[i] + rate[i - 1] + rate[i - 2] + rate[i - 3]) / 4).toFixed(2))
+            }
+
+            return avgd
         }
 
-        return datasets
-    }
+        function getDatasets(data, fn, countries, fill) {
+            var colors = ['rgb(255, 132, 255)', 'rgb(255, 99, 132)', 'rgb(99, 255, 132)', 'rgb(99, 132, 255)', 'rgb(132, 255, 255)', 'rgb(255, 255, 132)']
+            var datasets = []
 
-    var confirmed_cvs = document.getElementById('confirmed').getContext('2d')
-    var rate_cvs = document.getElementById('rate').getContext('2d')
-    var recovery_cvs = document.getElementById('recovery').getContext('2d')
-
-    var config = {
-        // The type of chart we want to create
-        type: 'line',
-
-        // The data for our dataset
-        data: {
-            datasets: null,
-            labels: null
-        },
-
-        // Configuration options go here
-        options: {
-            responsive: true,
-            title: {
-                display: true,
-                text: 'Corona Confirmed Comparison'
-            },
-            tooltips: {
-                mode: 'index',
-                intersect: false,
-            },
-            scales: {
-                xAxes: [{
-                    display: true,
-                    scaleLabel: {
-                        display: true,
-                        labelString: 'Days since 25 confirmed'
+            for (var i = 0; i < countries.length; i++) {
+                datasets.push(
+                    {
+                        label: countries[i],
+                        fill: fill,
+                        backgroundColor: colors[i],
+                        borderColor: colors[i],
+                        data: fn(data, countries[i])
                     }
-                }],
-                yAxes: [{
+                )
+            }
+
+            return datasets
+        }
+
+        var config = {
+            // The type of chart we want to create
+            type: 'line',
+
+            // The data for our dataset
+            data: {
+                datasets: null,
+                labels: null
+            },
+
+            // Configuration options go here
+            options: {
+                responsive: true,
+                title: {
                     display: true,
-                    scaleLabel: {
+                    text: 'Corona Confirmed Comparison'
+                },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    xAxes: [{
                         display: true,
-                        labelString: 'confirmed'
-                    },
-                    ticks: {}
-                }]
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Days since 25 confirmed'
+                        }
+                    }],
+                    yAxes: [{
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'confirmed'
+                        },
+                        ticks: {}
+                    }]
+                }
             }
         }
-    }
 
-    var chartc = null
-    var chartr = null
-    var chartrc = null
+        var charts = {}
 
-    function refresh() {
-        var countries = document.getElementById('countries').value.split(";").map(e => e.trim())
+        function makeChart(name, config)
+        {
+            var canvas = document.getElementById(name).getContext('2d')
+            if(name in charts) charts[name].destroy()
+            charts[name] = new Chart(canvas, config)
+        }
 
-        var err = ""
+        function refresh() {
+            var countries = document.getElementById('countries').value.split(";").map(e => e.trim())
 
-        fetch("https://pomber.github.io/covid19/timeseries.json")
-            .then(response => { return response.json() })
-            .then(data => {
-                var fill = !chartc
+            var err = ""
 
-                for (var c of countries) {
-                    if (!(c in data))
-                        err += c + " is not a know country name "
+            fetch("https://pomber.github.io/covid19/timeseries.json")
+                .then(response => { return response.json() })
+                .then(data => {
+                    var fill = !Object.keys(charts).length
+
+                    for (var c of countries) {
+                        if (!(c in data))
+                            err += c + " is not a know country name "
+                    }
+
+                    if (err) {
+                        alert(err)
+                        return
+                    }
+
+                    var cconfig = JSON.parse(JSON.stringify(config))
+                    cconfig.data.datasets = getDatasets(data, getDays, countries, fill)
+                    cconfig.data.labels = labels
+                    makeChart("confirmed", cconfig)
+
+                    cconfig = JSON.parse(JSON.stringify(config))
+                    cconfig.options.title.text = 'Corona infection rate comparison'
+                    cconfig.options.scales.yAxes[0].scaleLabel.labelString = "confirmed today/yesterday"
+                    cconfig.options.scales.yAxes[0].ticks.min = 0.9
+                    cconfig.data.datasets = getDatasets(data, getRate, countries, false)
+                    cconfig.data.labels = labels
+                    makeChart("rate", cconfig)
+
+                    cconfig = JSON.parse(JSON.stringify(config))
+                    cconfig.options.title.text = 'Corona mortality rate comparison'
+                    cconfig.options.scales.yAxes[0].scaleLabel.labelString = "deaths/confirmed [%]"
+                    cconfig.data.datasets = getDatasets(data, getMortality, countries, false)
+                    cconfig.data.labels = labels
+                    makeChart("mortality", cconfig)
+
+                    cconfig = JSON.parse(JSON.stringify(config))
+                    cconfig.options.title.text = 'Corona infected comparison'
+                    cconfig.options.scales.yAxes[0].scaleLabel.labelString = "confirmed - recovered - dead"
+                    cconfig.data.datasets = getDatasets(data, getInfected, countries, fill)
+                    cconfig.data.labels = labels
+                    makeChart("recovery", cconfig)
                 }
+                )
+        }
 
-                if (err) {
-                    alert(err)
-                    return
-                }
+        refresh()
+    </script>
+</body>
 
-                var cconfig = JSON.parse(JSON.stringify(config))
-                cconfig.data.datasets = getDatasets(data, getDays, countries, fill)
-                cconfig.data.labels = labels
-                if (chartc) chartc.destroy()
-                chartc = new Chart(confirmed_cvs, cconfig)
-
-                cconfig = JSON.parse(JSON.stringify(config))
-                cconfig.options.title.text = 'Corona infection rate comparison'
-                cconfig.options.scales.yAxes[0].scaleLabel.labelString = "confirmed today/yesterday"
-                cconfig.options.scales.yAxes[0].ticks.min = 0.9
-                cconfig.data.datasets = getDatasets(data, getRate, countries, false)
-                cconfig.data.labels = labels
-                if (chartr) chartr.destroy()
-                chartr = new Chart(rate_cvs, cconfig)
-
-                cconfig = JSON.parse(JSON.stringify(config))
-                cconfig.options.title.text = 'Corona infected comparison'
-                cconfig.options.scales.yAxes[0].scaleLabel.labelString = "confirmed - recovered - dead"
-                cconfig.data.datasets = getDatasets(data, getInfected, countries, fill)
-                cconfig.data.labels = labels
-                if (chartrc) chartrc.destroy()
-                chartrc = new Chart(recovery_cvs, cconfig)
-            }
-            )
-    }
-
-    refresh()
-</script>
+</html>
