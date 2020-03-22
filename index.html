@@ -238,7 +238,8 @@
         }
 
         function refresh() {
-            var countries = document.getElementById('countries').value.split(";").map(e => e.trim())
+            var countries_str = document.getElementById('countries').value
+            var countries = countries_str.split(";").map(e => e.trim())
 
             var err = ""
 
@@ -256,6 +257,9 @@
                         alert(err)
                         return
                     }
+
+                    if(!fill)
+                        window.location.hash = "#"+encodeURI(countries_str)
 
                     var cconfig = JSON.parse(JSON.stringify(config))
                     cconfig.data.datasets = getDatasets(data, getDays, countries, fill)
@@ -287,6 +291,10 @@
                 )
         }
 
+        if (window.location.hash) {
+            document.getElementById('countries').value = decodeURI(window.location.hash.substring(1))
+            charts["_dummy"] = 1 // force non-filled style
+        }
         refresh()
     </script>
 </body>
