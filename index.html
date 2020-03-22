@@ -64,30 +64,22 @@
             However, <em>confirmed</em> does not mean the same between different countries and even in the same country
             at
             different time points of the epidemic. This is due to the sampling bias induced by the limited amount of
-            corona
-            test
-            kits.
+            corona test kits.
             In the early days of the epidemic there are enough kits to test everyone, so many cases that do not yet show
             symptoms are tested.
             With ongoing spread, we hit limits on test-kit and health-system capacities and the focus shifts to testing
-            severe
-            cases only.
-            This in turn pushes the mortality rate.
-            <canvas id="mortality"></canvas>
-            <p class="card-text">
-                A significant increase of the mortality rate indicates that
-                <ol>
-                    <li>the confirmed count is being under-estimated.</li>
-                    <li>the health-system capacites being exhausted.</li>
-                </ol>
-            </p>
+            severe cases only. This in turn pushes the fatality rate.
+            <canvas id="fatality"></canvas>
+            <p class="card-text">A significant increase of the fatality rate indicates that</p>
+            <ol>
+                <li>the confirmed count is being under-estimated.</li>
+                <li>the health-system capacites being exhausted.</li>
+            </ol>
             <div class="alert alert-primary" role="alert">
-                We are only talking about an <em>estimate</em> of mortality here as we cannot measure the true
-                mortality
+                We are only talking about an <em>estimate</em> of fatality rate here, as we cannot measure the true
+                fatality
                 rate while the epidemic is ongoing. For us the relative rate between countries is sufficient. Therefore
-                we
-                simpliy
-                chose the optimisitic deaths by confirmed ratio here.
+                we simpliy chose the optimisitic deaths by confirmed ratio here.
             </div>
         </div>
 
@@ -95,8 +87,20 @@
 
     <div class="card mt-3">
         <div class="card-body">
+            In contrast to the fatality rate, the mortality rate below is shown in dead per million inhabitants.
+            This makes it independant of whether the confirmed count is estimated correctly. In most cases both will be
+            correlated.
             <canvas id="dead-per-million"></canvas>
-            The fatality rate, shown in dead per million inhabitants, can be an indicator of the influence of the pandemic on a countries society and economy. Since it lags behind the current developments by several days it is a poor indicator for the effectiveness of policies.
+            <p>
+                However, the mortality rate
+                is a better indicator of the influence of the pandepic on a countries society and economy - especially
+                when the health-system is exhausted.
+            </p>
+            <div class="alert alert-primary" role="alert">
+                The population count to compute the mortality is based on <a
+                    href="https://github.com/paroj/arewedeadyet/blob/master/population_from_wikipedia.js">data from
+                    wikipedia</a>
+            </div>
         </div>
     </div>
 
@@ -118,7 +122,7 @@
     </div>
     <hr>
     Source-code: <a href="https://github.com/paroj/arewedeadyet">https://github.com/paroj/arewedeadyet</a><br>
-    <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License"
+    <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License"
             style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br />This work is
     licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons
         Attribution-NonCommercial-ShareAlike 4.0 International License</a>.
@@ -151,20 +155,20 @@
             return infected
         }
 
-        function getMortality(data, country) {
-            var mortality = []
+        function getFatalityRate(data, country) {
+            var fatality = []
             for (var day of data[country]) {
                 if (day["confirmed"] < 25) continue
-                mortality.push((day["deaths"] / day["confirmed"] * 100).toFixed(2))
+                fatality.push((day["deaths"] / day["confirmed"] * 100).toFixed(2))
             }
-            return mortality
+            return fatality
         }
 
         function getDeadPerMillion(data, country) {
             var dead = []
             for (var day of data[country]) {
                 if (day["confirmed"] < 25) continue
-                dead.push((day["deaths"]/(population[country]/1e6)).toFixed(2))
+                dead.push((day["deaths"] / (population[country] / 1e6)).toFixed(2))
             }
             return dead
         }
@@ -246,10 +250,9 @@
 
         var charts = {}
 
-        function makeChart(name, config)
-        {
+        function makeChart(name, config) {
             var canvas = document.getElementById(name).getContext('2d')
-            if(name in charts) charts[name].destroy()
+            if (name in charts) charts[name].destroy()
             charts[name] = new Chart(canvas, config)
         }
 
@@ -276,8 +279,8 @@
                         return
                     }
 
-                    if(!fill)
-                        window.location.hash = "#"+encodeURI(countries_str)
+                    if (!fill)
+                        window.location.hash = "#" + encodeURI(countries_str)
 
                     var cconfig = JSON.parse(JSON.stringify(config))
                     cconfig.data.datasets = getDatasets(data, getDays, countries, fill)
@@ -293,14 +296,14 @@
                     makeChart("rate", cconfig)
 
                     cconfig = JSON.parse(JSON.stringify(config))
-                    cconfig.options.title.text = 'Corona mortality rate comparison'
+                    cconfig.options.title.text = 'Corona fatality rate comparison'
                     cconfig.options.scales.yAxes[0].scaleLabel.labelString = "deaths/confirmed [%]"
-                    cconfig.data.datasets = getDatasets(data, getMortality, countries, false)
+                    cconfig.data.datasets = getDatasets(data, getFatalityRate, countries, false)
                     cconfig.data.labels = labels
-                    makeChart("mortality", cconfig)
+                    makeChart("fatality", cconfig)
 
                     cconfig = JSON.parse(JSON.stringify(config))
-                    cconfig.options.title.text = 'Fatality rate comparison'
+                    cconfig.options.title.text = 'Mortality rate comparison'
                     cconfig.options.scales.yAxes[0].scaleLabel.labelString = "deaths per million"
                     cconfig.data.datasets = getDatasets(data, getDeadPerMillion, countries, false)
                     cconfig.data.labels = labels
