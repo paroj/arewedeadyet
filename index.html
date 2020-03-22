@@ -93,7 +93,12 @@
 
     </div>
 
-
+    <div class="card mt-3">
+        <div class="card-body">
+            <canvas id="dead-per-million"></canvas>
+            The fatality rate, shown in dead per million inhabitants, can be an indicator of the influence of the pandemic on a countries society and economy. Since it lags behind the current developments by several days it is a poor indicator for the effectiveness of policies.
+        </div>
+    </div>
 
     <div class="card mt-3">
         <div class="card-body">
@@ -117,6 +122,8 @@
             style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br />This work is
     licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons
         Attribution-NonCommercial-ShareAlike 4.0 International License</a>.
+
+    <script src="./population_from_wikipedia.js"></script>
     <script>
         "use strict"
 
@@ -153,6 +160,14 @@
             return mortality
         }
 
+        function getDeadPerMillion(data, country) {
+            var dead = []
+            for (var day of data[country]) {
+                if (day["confirmed"] < 25) continue
+                dead.push((day["deaths"]/(population[country]/1e6)).toFixed(2))
+            }
+            return dead
+        }
 
         function getRate(data, country) {
             var confirmed = days[country]
@@ -252,6 +267,8 @@
                     for (var c of countries) {
                         if (!(c in data))
                             err += c + " is not a know country name "
+                        if (!(c in population))
+                            err += " population of " + c + " not known"
                     }
 
                     if (err) {
@@ -281,6 +298,13 @@
                     cconfig.data.datasets = getDatasets(data, getMortality, countries, false)
                     cconfig.data.labels = labels
                     makeChart("mortality", cconfig)
+
+                    cconfig = JSON.parse(JSON.stringify(config))
+                    cconfig.options.title.text = 'Fatality rate comparison'
+                    cconfig.options.scales.yAxes[0].scaleLabel.labelString = "deaths per million"
+                    cconfig.data.datasets = getDatasets(data, getDeadPerMillion, countries, false)
+                    cconfig.data.labels = labels
+                    makeChart("dead-per-million", cconfig)
 
                     cconfig = JSON.parse(JSON.stringify(config))
                     cconfig.options.title.text = 'Corona infected comparison'
