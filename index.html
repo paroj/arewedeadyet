@@ -8,6 +8,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="shortcut icon" type="image/x-icon" href="/arewedeadyet/favicon.ico">
     <title>Are we dead yet?</title>
+    <style>
+        canvas {
+            height: 30em;
+            max-height: 30em;
+        }
+    </style>
 </head>
 
 <body class="container">
@@ -220,6 +226,7 @@
             // Configuration options go here
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 title: {
                     display: true,
                     text: 'Corona Confirmed Comparison'
