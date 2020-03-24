@@ -2,8 +2,9 @@
 <html lang="en">
 
 <head>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
-        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <!--<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">-->
+    <link rel="stylesheet" href="https://bootswatch.com/4/cyborg/bootstrap.min.css" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="shortcut icon" type="image/x-icon" href="/arewedeadyet/favicon.ico">
@@ -59,6 +60,7 @@
 
     <div class="card mt-3">
         <div class="card-body">
+            <a href="#confirmed">#</a>
             <canvas id="confirmed"></canvas>
             This is still pretty useless as the countries differ in total population and population density, lets
             turn to
@@ -68,6 +70,7 @@
     </div>
     <div class="card mt-3">
         <div class="card-body">
+            <a href="#rate">#</a>
             <canvas id="rate"></canvas>
             <p class="card-text">
                 The values are smoothed using a moving
@@ -82,6 +85,7 @@
     </div>
     <div class="card mt-3">
         <div class="card-body">
+            <a href="#fatality">#</a>
             However, <em>confirmed</em> does not mean the same between different countries and even in the same country
             at
             different time points of the epidemic. This is due to the sampling bias induced by the limited amount of
@@ -108,6 +112,7 @@
 
     <div class="card mt-3">
         <div class="card-body">
+            <a href="#dead-per-million">#</a>
             In contrast to the fatality rate, the mortality rate below is shown in dead per million inhabitants.
             This makes it independant of whether the confirmed count is estimated correctly. In most cases both will be
             correlated.
@@ -127,6 +132,7 @@
 
     <div class="card mt-3">
         <div class="card-body">
+            <a href="#recovery">#</a>
             To close with something positive, lets look at the absolute number of infections. That is, cases which are
             neither
             recovered nor died yet and are potentially infectious.
@@ -228,6 +234,8 @@
             return datasets
         }
 
+        Chart.defaults.global.defaultFontColor = 'white'
+        Chart.defaults.scale.gridLines.color = "rgba(255,255,255, 0.2)"
         var config = {
             // The type of chart we want to create
             type: 'line',
@@ -301,8 +309,7 @@
                         return
                     }
 
-                    if (!initial)
-                    {
+                    if (!initial) {
                         history.pushState(null, "title", "?countries=" + encodeURI(countries_str))
                     }
 
@@ -344,7 +351,7 @@
         }
 
         var urlParams = new URLSearchParams(window.location.search)
-        var countries_str = urlParams?.get('countries')
+        var countries_str = urlParams.get('countries')
 
         // fallback for old links
         if (window.location.hash && !document.getElementById(window.location.hash.substring(1))) {
