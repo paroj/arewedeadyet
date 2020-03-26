@@ -175,9 +175,12 @@
 
         function getInfected(data, country) {
             var infected = []
+            var last_valid_recovered = null // workaround data issue at JHU
             for (var day of data[country]) {
                 if (day["confirmed"] < 25) continue
-                infected.push(day["confirmed"] - day["deaths"] - day["recovered"])
+                if(day["recovered"])
+                    last_valid_recovered = day["recovered"]
+                infected.push(day["confirmed"] - day["deaths"] - last_valid_recovered)
             }
             return infected
         }
