@@ -162,7 +162,7 @@
         var days = {}
 
         function beforeDayZero(day) {
-            return day["confirmed"] < 25
+            return day["confirmed"] < 500
         }
 
         function getDays(data, country) {
@@ -270,7 +270,7 @@
                         display: true,
                         scaleLabel: {
                             display: true,
-                            labelString: 'Days since 25 confirmed'
+                            labelString: 'Days since 500 confirmed'
                         }
                     }],
                     yAxes: [{
