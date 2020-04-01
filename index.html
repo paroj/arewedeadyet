@@ -344,8 +344,9 @@
             cconfig = JSON.parse(JSON.stringify(config))
             cconfig.options.title.text = 'Corona infection doubling time comparison'
             cconfig.options.scales.yAxes[0].scaleLabel.labelString = "days"
-            cconfig.options.scales.yAxes[0].ticks.min = 0.9
+            cconfig.options.scales.yAxes[0].ticks.min = 0.5
             cconfig.options.scales.yAxes[0].ticks.max = 25
+            cconfig.options.tooltips.position = "nearest"
             cconfig.data.datasets = getDatasets(data, getDoublingTime, countries, false)
             cconfig.data.labels = labels
             makeChart("tdoubling", cconfig)
