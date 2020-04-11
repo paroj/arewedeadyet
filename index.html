@@ -39,18 +39,21 @@
             Countries to compare
         </div>
         <ul class="list-group list-group-flush">
-            <a class="list-group-item list-group-item-action" href="?countries=Korea, South; Germany; US; China">
-                Korea, South; Germany; US; China
+            <a class="list-group-item list-group-item-action" href="?countries=Korea, South; Germany; Austria; China">
+                Korea, South; Germany; Austria; China
             </a>
             <a class="list-group-item list-group-item-action" href="?countries=Italy; Spain; France; China">
                 Italy; Spain; France; China
+            </a>
+            <a class="list-group-item list-group-item-action" href="?countries=India; EU; US; China">
+                India; EU; US; China
             </a>
         </ul>
         <div class="input-group">
             <div class="input-group-prepend">
                 <span class="input-group-text" id="basic-addon1">Custom</span>
             </div>
-            <input type="text" id="countries" value="Korea, South; Germany; US; China" class="form-control">
+            <input type="text" id="countries" value="Korea, South; Germany; Austria; China" class="form-control">
             <div class="input-group-append">
                 <input type="button" value="Apply" onclick="refresh()" class="btn btn-primary">
             </div>
@@ -82,9 +85,10 @@
             <div class="alert alert-primary" role="alert">An infection rate of 1.0 means no new infections.
             </div>
             <a href="#tdoubling">#</a> The same data can be visualized more intuitively as the <em>doubling time</em>,
-            i.e. the time it takes for the confirmed count to double. It is given below for reference. 
+            i.e. the time it takes for the confirmed count to double. It is given below for reference.
             <canvas id="tdoubling"></canvas>
-            However, this representation is less numerically stable as it diverges to infinity as the infection rate approaches to 1.0.
+            However, this representation is less numerically stable as it diverges to infinity as the infection rate
+            approaches to 1.0.
         </div>
     </div>
     <div class="card mt-3">
@@ -301,6 +305,36 @@
             charts[name] = new Chart(canvas, config)
         }
 
+        function mergeDays(from, to) {
+            // not smart: quadratic complexity, but whatever
+            outer:
+            for (var d2 of from) {
+                for (var i = 0; i < to.length; i++) {
+                    var d1 = to[i]
+                    if (d1.date == d2.date) {
+                        d1.confirmed += d2.confirmed
+                        d1.deaths += d2.deaths
+                        d1.recovered += d2.recovered
+                        continue outer
+                    }
+                }
+                to.splice(i, 0, Object.assign({}, d2))
+            }
+        }
+
+        function aggregateEU(data, population) {
+            var countries = ["Austria", "Belgium", "Bulgaria", "Croatia", "Cyprus", "Czechia", "Denmark", "Estonia", "Finland", "France", "Germany", "Greece", "Hungary", "Ireland", "Italy", "Latvia", "Lithuania", "Luxembourg", "Malta", "Netherlands", "Poland", "Portugal", "Romania", "Slovakia", "Slovenia", "Spain", "Sweden"]
+            console.assert(countries.length == 27, "https://en.wikipedia.org/wiki/Member_state_of_the_European_Union")
+
+            data["EU"] = []
+            population["EU"] = 0
+
+            for (var c of countries) {
+                mergeDays(data[c], data["EU"])
+                population["EU"] += population[c]
+            }
+        }
+
         async function refresh() {
             var countries_str = document.getElementById('countries').value
             var countries = countries_str.split(";").map(e => e.trim())
@@ -309,6 +343,8 @@
 
             var response = await fetch("https://pomber.github.io/covid19/timeseries.json")
             var data = await response.json()
+
+            aggregateEU(data, population)
 
             var initial = !Object.keys(charts).length
 
