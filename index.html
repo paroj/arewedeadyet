@@ -80,6 +80,9 @@
         </div>
     </div>
     <div class="card mt-3">
+        <div class="card-header">
+            Spreading rate measures
+        </div>
         <div class="card-body">
             <a href="#rate">#</a>
             <canvas id="rate"></canvas>
@@ -92,11 +95,29 @@
                 countermeasurements, regardless of the population size.</p>
             <div class="alert alert-primary" role="alert">An infection rate of 1.0 means no new infections.
             </div>
+            <hr>
             <a href="#tdoubling">#</a> The same data can be visualized more intuitively as the <em>doubling time</em>,
             i.e. the time it takes for the confirmed count to double. It is given below for reference.
             <canvas id="tdoubling"></canvas>
-            However, this representation is less numerically stable as it diverges to infinity as the infection rate
-            approaches to 1.0.
+            <p class="card-text">
+                However, this representation is less numerically stable as it diverges to infinity as the infection rate
+                approaches to 1.0.
+            </p>
+            <hr>
+            <a href="#r0">#</a> Yet another way to represent the same data is the <a
+                href="https://en.wikipedia.org/wiki/Basic_reproduction_number#Notes">effective reproduction number R</a>.
+            <canvas id="r0"></canvas>
+            <p class="card-text">
+                Actually, it is very similar what we defined as the infection rate above. However, instead of comparing the
+                the absolute number of <em>confirmed</em> from day to day, the change in <em>confirmed</em> over a period of time is
+                used.
+                Therefore, R becomes 0.0 if there are no new infections.
+            </p>
+            <div class="alert alert-primary" role="alert">
+                <a href="https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology">There is a variety of models to
+                    estimate R.</a>
+                I went with a rather naive approach (see code), so the actual numbers may vary from official reports.
+            </div>
         </div>
     </div>
     <div class="card mt-3">
@@ -236,6 +257,19 @@
             }
 
             return avgd
+        }
+
+        function getRe(data, country) {
+            var delta = 5 // days
+
+            var confirmed = days[country]
+            var rate = new Array(2*delta).fill(-1)
+
+            for (var i = delta; i < confirmed.length; i++) {
+                rate.push((confirmed[i] - confirmed[i - delta]) / (confirmed[i - delta] - confirmed[i - 2*delta]))
+            }
+
+            return rate
         }
 
         function getDoublingTime(data, country) {
@@ -394,6 +428,15 @@
             cconfig.data.datasets = getDatasets(data, getDoublingTime, countries, false)
             cconfig.data.labels = labels
             makeChart("tdoubling", cconfig)
+
+            cconfig = JSON.parse(JSON.stringify(config))
+            cconfig.options.title.text = 'Corona effective reproduction number'
+            cconfig.options.scales.yAxes[0].scaleLabel.labelString = "see getRe in code"
+            cconfig.options.scales.yAxes[0].ticks.min = 0.0
+            cconfig.options.scales.yAxes[0].ticks.max = 3
+            cconfig.data.datasets = getDatasets(data, getRe, countries, false)
+            cconfig.data.labels = labels
+            makeChart("r0", cconfig)
 
             cconfig = JSON.parse(JSON.stringify(config))
             cconfig.options.title.text = 'Corona fatality rate comparison'
