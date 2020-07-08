@@ -195,7 +195,7 @@
     <script>
         "use strict"
 
-        var labels = []
+        var labels = null
         var days = {}
 
         function beforeDayZero(day) {
@@ -405,6 +405,8 @@
             if (!initial) {
                 history.pushState(null, "title", "?countries=" + encodeURI(countries_str))
             }
+
+            labels = [] // force recompute labels length
 
             var cconfig = JSON.parse(JSON.stringify(config))
             cconfig.data.datasets = getDatasets(data, getDays, countries, false)
