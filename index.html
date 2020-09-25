@@ -95,6 +95,7 @@
                 countermeasurements, regardless of the population size.</p>
             <div class="alert alert-primary" role="alert">An infection rate of 1.0 means no new infections.
             </div>
+            However, after the initial outbreak a significant part of populatian has been infected and any new outbreaks are dimished in this metric.
             <hr>
             <a href="#tdoubling">#</a> The same data can be visualized more intuitively as the <em>doubling time</em>,
             i.e. the time it takes for the confirmed count to double. It is given below for reference.
@@ -136,6 +137,10 @@
             <ol>
                 <li>the confirmed count is being under-estimated.</li>
                 <li>the health-system capacites being exhausted.</li>
+            </ol>
+            <p>Conversely, a decrase of the fatality rate indicates that</p>
+            <ol>
+                <li>the confirmed count was previously under-estimated. (e.g. by the exhaustion of the health system and focusing on severe cases)</li>
             </ol>
             <div class="alert alert-primary" role="alert">
                 We are only talking about an <em>estimate</em> of fatality rate here, as we cannot measure the true
@@ -260,7 +265,7 @@
         }
 
         function getRe(data, country) {
-            var delta = 5 // days
+            var delta = 7 // days
 
             var confirmed = days[country]
             var rate = new Array(2*delta).fill(-1)
