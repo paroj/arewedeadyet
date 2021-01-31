@@ -115,9 +115,24 @@
                 Therefore, R becomes 0.0 if there are no new infections.
             </p>
             <div class="alert alert-primary" role="alert">
+                The number R determines which proportion of the population must be vaccinated to stop the disease.
+                Generally speaking: the higher R, the higher the proportion.
+            </div>
+            <div class="alert alert-primary" role="alert">
                 <a href="https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology">There is a variety of models to
                     estimate R.</a>
                 I went with a rather naive approach (see code), so the actual numbers may vary from official reports.
+            </div>
+            <a href="#incidence">#</a> Yet another way to represent the same data is the 7-Day incidence.
+            <canvas id="incidence"></canvas>
+            <p class="card-text">
+                This measures the number of infected per 100.000 over the last 7-Days. This too, measures the effective reproduction
+                of the virus. But the different unit makes this more understandable I guess.
+            </p>
+            <div class="alert alert-primary" role="alert">
+                The population count to compute the incidence is based on <a
+                    href="https://github.com/paroj/arewedeadyet/blob/master/population_from_wikipedia.js">data from
+                    wikipedia</a>
             </div>
         </div>
     </div>
@@ -275,6 +290,27 @@
             }
 
             return rate
+        }
+
+        function getIncidence(data, country) {
+            var delta = 7 // days
+
+            var confirmed = days[country]
+            var incidence = new Array(confirmed.length).fill(0)
+
+            for (var i = delta; i < confirmed.length; i++) {
+                // todays incidence
+                var dc = Math.max(0, confirmed[i] - confirmed[i - 1])
+                // add todays incidence to following 7 days
+                for(var j = 0; j < delta; j++)
+                    incidence[Math.min(i + j, confirmed.length)] += dc
+            }
+
+            for (var i = 0; i < incidence.length; i++) {
+                incidence[i] /= (population[country] / 1e5)
+            }
+
+            return incidence
         }
 
         function getDoublingTime(data, country) {
@@ -444,6 +480,14 @@
             cconfig.data.datasets = getDatasets(data, getRe, countries, false)
             cconfig.data.labels = labels
             makeChart("r0", cconfig)
+
+            cconfig = JSON.parse(JSON.stringify(config))
+            cconfig.options.title.text = '7-Day incidence per 100.000'
+            cconfig.options.scales.yAxes[0].scaleLabel.labelString = "new infections"
+            cconfig.options.scales.yAxes[0].ticks.min = 0.0
+            cconfig.data.datasets = getDatasets(data, getIncidence, countries, false)
+            cconfig.data.labels = labels
+            makeChart("incidence", cconfig)
 
             cconfig = JSON.parse(JSON.stringify(config))
             cconfig.options.title.text = 'Corona fatality rate comparison'
