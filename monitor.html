@@ -216,6 +216,7 @@
         function makeCharts(data, countries)
         {
             config.options.scales.xAxes[0].ticks.maxTicksLimit = 25
+            config.options.scales.xAxes[0].scaleLabel.display = false
 
             var cconfig = JSON.parse(JSON.stringify(config))
             cconfig.data.datasets = getDatasets(data, getDays, countries, false)
