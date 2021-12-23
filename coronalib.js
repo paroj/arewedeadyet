@@ -223,6 +223,39 @@ function aggregateEU(data, population) {
     }
 }
 
+function show_autocomplete()
+{
+    var countries_str = document.getElementById('countries').value
+    var elements = countries_str.split(";")
+    var typing = elements[elements.length - 1].trim()
+    
+    var autocomplete = document.getElementById("autocomplete")
+    autocomplete.classList.remove("show")
+    if(typing.length < 2) return
+
+    var re = RegExp("^"+typing, 'i')
+    var matches = all_countries.filter(x => re.test(x))
+
+    if(matches.length == 0) return
+
+    let completeHTML = ""
+    for (const m of matches) {
+        completeHTML += `<a class="dropdown-item" href="#" onclick="complete(this)">${m}</a>`
+    }
+
+    autocomplete.innerHTML = completeHTML
+    autocomplete.classList.add("show")
+}
+
+function complete(elt)
+{
+    var countries_str = document.getElementById('countries').value
+    var elements = countries_str.split(";")
+    elements[elements.length - 1] = " "+elt.innerText
+    document.getElementById('countries').value = elements.join(";")
+    document.getElementById('autocomplete').classList.remove("show")
+}
+
 async function refresh() {
     var countries_str = document.getElementById('countries').value
     var countries = countries_str.split(";").map(e => e.trim())
@@ -231,6 +264,8 @@ async function refresh() {
 
     var response = await fetch("https://pomber.github.io/covid19/timeseries.json")
     var data = await response.json()
+
+    all_countries = Object.keys(data)
 
     aggregateEU(data, population)
 
@@ -259,6 +294,7 @@ async function refresh() {
 
 var urlParams = new URLSearchParams(window.location.search)
 var countries_str = urlParams.get('countries')
+var all_countries = null
 
 // fallback for old links
 if (window.location.hash && !document.getElementById(window.location.hash.substring(1))) {

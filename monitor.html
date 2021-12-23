@@ -50,9 +50,10 @@
             <div class="input-group-prepend">
                 <span class="input-group-text" id="basic-addon1">Custom</span>
             </div>
-            <input type="text" id="countries" value="Italy; Germany; France; Spain" class="form-control">
-            <div class="input-group-append">
+            <input type="text" id="countries" value="Italy; Germany; France; Spain" class="form-control" onkeyup="show_autocomplete()">
+            <div class="input-group-append dropleft">
                 <input type="button" value="Apply" onclick="refresh()" class="btn btn-primary">
+                <div class="dropdown-menu" id="autocomplete"></div>
             </div>
         </div>
     </div>
