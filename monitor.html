@@ -27,15 +27,15 @@
         <hr>
         <p>The following charts are based on live data from <a
                 href="https://github.com/pomber/covid19">https://github.com/pomber/covid19</a>, which in turn sources <a
-                href="https://coronavirus.jhu.edu/map.html">jhu.edu</a>.</p>
-        <p>
+                href="https://coronavirus.jhu.edu/map.html">jhu.edu</a>.
+        </p>
     </div>
 
     <div class="card">
         <div class="card-header">
             Countries to compare
         </div>
-        <ul class="list-group list-group-flush">
+        <div class="list-group list-group-flush">
             <a class="list-group-item list-group-item-action" href="?countries=Italy; Germany; France; Spain">
                 Italy; Germany; France; Spain
             </a>
@@ -45,7 +45,7 @@
             <a class="list-group-item list-group-item-action" href="?countries=India; EU; US; Brazil">
                 India; EU; US; Brazil
             </a>
-        </ul>
+        </div>
         <div class="input-group">
             <div class="input-group-prepend">
                 <span class="input-group-text" id="basic-addon1">Custom</span>
@@ -130,6 +130,7 @@
                     estimate R.</a>
                 I went with a rather naive approach (see code), so the actual numbers may vary from official reports.
             </div>
+            <hr>
             <a href="#incidence">#</a> Yet another way to represent the same data is the 7-Day incidence.
             <canvas id="incidence"></canvas>
             <p class="card-text">
