@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!--<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">-->
+    <link rel="stylesheet" href="https://bootswatch.com/4/cyborg/bootstrap.min.css" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="shortcut icon" type="image/x-icon" href="/arewedeadyet/favicon.ico">
+    <title>Are we dead yet?</title>
+    <style>
+        canvas {
+            height: 30em;
+            max-height: 30em;
+        }
+    </style>
+</head>
+
+<body class="container">
+    <div class="jumbotron">
+        <p class="lead">
+            So by now we entered the third year of corona. But how are we doing? Did we improve with managing the virus spread?
+            Lets take a look at the 7-Day incidence compared by the years to find out!
+            <br>
+            If you are rather interested in the big picture, <a href="monitor.html">you can find more live-metrics here.</a>
+        </p>
+        <hr>
+        <p>The following charts are based on live data from <a
+                href="https://github.com/pomber/covid19">https://github.com/pomber/covid19</a>, which in turn sources <a
+                href="https://coronavirus.jhu.edu/map.html">jhu.edu</a>.</p>
+        <p>
+            The population count to compute the incidence is based on <a
+                href="https://github.com/paroj/arewedeadyet/blob/master/population_from_wikipedia.js">data from
+                wikipedia</a>
+        </p>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            Countries to compare
+        </div>
+        <div class="list-group list-group-flush">
+            <a class="list-group-item list-group-item-action" href="?countries=Italy; Germany; France; Spain">
+                Italy; Germany; France; Spain
+            </a>
+            <a class="list-group-item list-group-item-action" href="?countries=Korea, South; Israel; Austria; Sweden">
+                Korea, South; Israel; Austria; Sweden
+            </a>
+            <a class="list-group-item list-group-item-action" href="?countries=India; EU; US; Brazil">
+                India; EU; US; Brazil
+            </a>
+        </div>
+        <div class="input-group">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="basic-addon1">Custom</span>
+            </div>
+            <input type="text" id="countries" value="Italy; Germany; France; Spain" class="form-control" onkeyup="show_autocomplete()">
+            <div class="input-group-append dropleft">
+                <input type="button" value="Apply" onclick="refresh()" class="btn btn-primary">
+                <div class="dropdown-menu" id="autocomplete"></div>
+            </div>
+        </div>
+    </div>
+
+<div id="cards">
+</div>
+
+    <hr>
+    Source-code: <a href="https://github.com/paroj/arewedeadyet">https://github.com/paroj/arewedeadyet</a><br>
+    <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License"
+            style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br />This work is
+    licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons
+        Attribution-NonCommercial-ShareAlike 4.0 International License</a>.
+
+    <script src="./population_from_wikipedia.js"></script>
+    <script src="./coronalib.js"></script>
+    <script>
+        "use strict"
+
+        beforeDayZero = function(day) {
+            return new Date(day["date"]) < new Date("2020-1-1")
+        }
+
+        getLabel = function(day, daynum)
+        {
+            return day["date"]
+        }
+
+        function getRewind(data, country) {
+            var datasets = []
+
+            var years = ["2020", "2021", "2022"]
+            const colors = ['rgb(64, 128, 64)', 'rgb(128, 192, 128)', 'rgb(180, 255, 0)']
+            var ranges = []
+
+            for (var i = 0; i < labels.length; i++) {
+                if(labels[i] == "2021-1-1")
+                    ranges.push([0, i])
+                if(labels[i] == "2022-1-1")
+                    ranges.push([ranges[0][1], i])
+            }
+            ranges.push([ranges[1][1], labels.length])
+            
+            var pad = new Array(20).fill(0)
+            var allIncidences = getIncidence(data, country).map(x => x.toFixed(2))
+
+            for (var i = 0; i < years.length; i++) {
+                var range = ranges[i]
+                var yearIncidences = allIncidences.slice(range[0], range[1])
+                if(i == 0) // 2020 starts at -1-22
+                    yearIncidences = pad.concat(yearIncidences)
+                
+                console.log(country + " " + years[i] + ": " + yearIncidences.length)
+                datasets.push(
+                    {
+                        label: years[i],
+                        backgroundColor: colors[i],
+                        borderColor: colors[i],
+                        fill: false,
+                        data: yearIncidences
+                    }
+                )
+            }
+
+            return datasets
+        }
+
+        function makeCharts(data, countries)
+        {
+            config.options.scales.xAxes[0].ticks.maxTicksLimit = 25
+            config.options.scales.xAxes[0].scaleLabel.display = false
+            
+            // compute common data via getDays
+            getDatasets(data, getDays, countries, false)
+
+            // hacky way to get the day of one year
+            var yearDays = []
+            for(var i = 0; i < labels.length; i++)
+            {
+                var d = new Date(labels[i])
+                if(d < new Date("2022-1-1") && d > new Date("2020-12-31"))
+                    yearDays.push(labels[i].substr(5))
+            }
+
+            document.getElementById("cards").innerHTML = ""
+            var cconfigs = []
+            for(var i = 0; i < countries.length; i++)
+            {
+                var cconfig = JSON.parse(JSON.stringify(config))
+                cconfig.options.title.text = '7-Day incidence per 100.000'
+                cconfig.options.scales.yAxes[0].scaleLabel.labelString = "new infections"
+                cconfig.options.scales.yAxes[0].ticks.min = 0.0
+                cconfig.data.datasets = getRewind(data, countries[i])
+                cconfig.data.labels = yearDays
+
+                document.getElementById("cards").innerHTML += `<div class="card mt-3">
+                    <div class="card-header">${countries[i]}</div>
+                    <div class="card-body"><canvas id="${countries[i]}"></canvas></div>
+                </div>`
+                cconfigs.push(cconfig) // why cant I call makeChart here? WAT JavaScript
+            }
+
+            for(var i = 0; i < countries.length; i++)
+                makeChart(countries[i], cconfigs[i])
+        }
+
+        refresh()
+    </script>
+</body>
+
+</html>
