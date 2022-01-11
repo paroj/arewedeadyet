@@ -20,9 +20,12 @@
 <body class="container">
     <div class="jumbotron">
         <p class="lead">
-            This website is unfortunately in use much longer than anticipated. By now, the media have bought some competent chart data.
-            Also counting the days since the initial outbreak does not make much sense any more. Therefore, I aligned the charts by
-            date for those who are here to get the statistics computed in javascript by their browser. <a href="original.html">You can find the original version here.</a>
+            I am quite frustrated with corona graphs in the news, since most reporters seem to have skipped math classes
+            back
+            then.
+            For instance, just plotting the number of confirmed infections at the respective dates does not tell you
+            anything
+            due to the different time point of outbreak. So lets fix that first.
         </p>
         <hr>
         <p>The following charts are based on live data from <a
@@ -32,7 +35,7 @@
     </div>
 
     <div class="alert alert-info" role="alert">
-        <a href="rewind.html">Corona in rewind: take a look at the incidence aligned by the years here.</a>
+       <a href="monitor.html">You can find a reduced number of plots, aligned by the current date here.</a>
     </div>
 
     <div class="card">
@@ -72,6 +75,9 @@
                 <a class="nav-link" href="#confirmed">Confirmed</a>
             </li>
             <li class="nav-item">
+                <a class="nav-link" href="#rate">Infection Rate</a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" href="#tdoubling">Doubling Time</a>
             </li>
             <li class="nav-item">
@@ -86,6 +92,9 @@
             <li class="nav-item">
                 <a class="nav-link" href="#dead-per-million">Mortality</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#recovery">Active infections</a>
+            </li>
         </ul>
     </div>
 
@@ -93,7 +102,11 @@
         <div class="card-body">
             <a href="#confirmed">#</a>
             <canvas id="confirmed"></canvas>
-            <p class="card-text"></p>
+            <p class="card-text">
+                This is still pretty useless as the countries differ in total population and population density, lets
+                turn to
+                something
+                actually comparable.</p>
             <div class="alert alert-primary" role="alert">Here, confirmed refers to a case being <b>reported</b> in contrast
                 to a
                 case
@@ -108,11 +121,24 @@
             Spreading rate measures
         </div>
         <div class="card-body">
-            <a href="#tdoubling">#</a> The infection rate can be visualised intuitively as the <em>doubling time</em>,
-            i.e. the time it takes for the confirmed count to double.
+            <a href="#rate">#</a>
+            <canvas id="rate"></canvas>
+            <p class="card-text">
+                The values are smoothed using a moving
+                average
+                over
+                seven days.
+                This numbers actually allow comparing how well the different countries are doing in their corona
+                countermeasurements, regardless of the population size.</p>
+            <div class="alert alert-primary" role="alert">An infection rate of 1.0 means no new infections.
+            </div>
+            However, after the initial outbreak a significant part of populatian has been infected and any new outbreaks are dimished in this metric.
+            <hr>
+            <a href="#tdoubling">#</a> The same data can be visualized more intuitively as the <em>doubling time</em>,
+            i.e. the time it takes for the confirmed count to double. It is given below for reference.
             <canvas id="tdoubling"></canvas>
             <p class="card-text">
-                However, this representation is numerically unstable as it diverges to infinity as the infection rate
+                However, this representation is less numerically stable as it diverges to infinity as the infection rate
                 approaches to 1.0.
             </p>
             <hr>
@@ -120,7 +146,7 @@
                 href="https://en.wikipedia.org/wiki/Basic_reproduction_number#Notes">effective reproduction number R</a>.
             <canvas id="r0"></canvas>
             <p class="card-text">
-                It is very similar the infection rate. However, instead of comparing the
+                Actually, it is very similar what we defined as the infection rate above. However, instead of comparing the
                 the absolute number of <em>confirmed</em> from day to day, the change in <em>confirmed</em> over a period of time is
                 used.
                 Therefore, R becomes 0.0 if there are no new infections.
@@ -198,6 +224,24 @@
             </div>
         </div>
     </div>
+
+    <div class="card mt-3">
+        <div class="card-body">
+            <a href="#recovery">#</a>
+            To close with something positive, lets look at the absolute number of infections. That is, cases which are
+            neither
+            recovered nor died yet and are potentially infectious.
+            If there are no such cases left, we can assume the epidemic to be stopped.
+
+            <canvas id="recovery"></canvas>
+
+
+            Notably, when this graph reaches zero you
+            <strong>can
+                not</strong> assume that the epidemic is stopped due to the stochastic nature of the data.
+            However, a rise of the graph after a decline can indicate that a second wave is coming.
+        </div>
+    </div>
     <hr>
     Source-code: <a href="https://github.com/paroj/arewedeadyet">https://github.com/paroj/arewedeadyet</a><br>
     <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License"
@@ -209,27 +253,23 @@
     <script src="./coronalib.js"></script>
     <script>
         "use strict"
-
-        beforeDayZero = function(day) {
-            return new Date(day["date"]) < new Date("2020-3-1")
-        }
-
-        getLabel = function(day, daynum)
-        {
-            return day["date"]
-        }
-
+        
         function makeCharts(data, countries)
         {
-            config.options.scales.xAxes[0].ticks.maxTicksLimit = 25
-            config.options.scales.xAxes[0].scaleLabel.display = false
-
             var cconfig = JSON.parse(JSON.stringify(config))
             cconfig.data.datasets = getDatasets(data, getDays, countries, false)
             cconfig.data.labels = labels
             cconfig.options.scales.yAxes[0].ticks.userCallback = tickDecimalPoint
             cconfig.options.tooltips.callbacks.label = tooltipDecimalPoint
             makeChart("confirmed", cconfig)
+
+            cconfig = JSON.parse(JSON.stringify(config))
+            cconfig.options.title.text = 'Corona infection rate comparison'
+            cconfig.options.scales.yAxes[0].scaleLabel.labelString = "confirmed today/yesterday"
+            cconfig.options.scales.yAxes[0].ticks.min = 0.9
+            cconfig.data.datasets = getDatasets(data, getRate, countries, false)
+            cconfig.data.labels = labels
+            makeChart("rate", cconfig)
 
             cconfig = JSON.parse(JSON.stringify(config))
             cconfig.options.title.text = 'Corona infection doubling time comparison'
@@ -271,6 +311,13 @@
             cconfig.data.datasets = getDatasets(data, getDeadPerMillion, countries, false)
             cconfig.data.labels = labels
             makeChart("dead-per-million", cconfig)
+
+            cconfig = JSON.parse(JSON.stringify(config))
+            cconfig.options.title.text = 'Corona infected comparison'
+            cconfig.options.scales.yAxes[0].scaleLabel.labelString = "confirmed - recovered - dead"
+            cconfig.data.datasets = getDatasets(data, getInfected, countries, false)
+            cconfig.data.labels = labels
+            makeChart("recovery", cconfig)     
         }
 
         refresh()
