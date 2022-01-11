@@ -227,6 +227,8 @@
             var cconfig = JSON.parse(JSON.stringify(config))
             cconfig.data.datasets = getDatasets(data, getDays, countries, false)
             cconfig.data.labels = labels
+            cconfig.options.scales.yAxes[0].ticks.userCallback = tickDecimalPoint
+            cconfig.options.tooltips.callbacks.label = tooltipDecimalPoint
             makeChart("confirmed", cconfig)
 
             cconfig = JSON.parse(JSON.stringify(config))

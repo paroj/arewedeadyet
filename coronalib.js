@@ -126,6 +126,17 @@ function getDatasets(data, fn, countries, fill) {
     return datasets
 }
 
+function tooltipDecimalPoint(tooltipItem, chart)
+{
+    var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label
+    return datasetLabel+": "+tooltipItem.yLabel.toLocaleString("en-US")
+}
+
+function tickDecimalPoint(value, index, values)
+{
+    return value.toLocaleString("en-US")
+}
+
 Chart.defaults.global.defaultFontColor = 'white'
 Chart.defaults.scale.gridLines.color = "rgba(255,255,255, 0.2)"
 var config = {
@@ -149,6 +160,7 @@ var config = {
         tooltips: {
             mode: 'index',
             intersect: false,
+            callbacks: {}
         },
         scales: {
             xAxes: [{
