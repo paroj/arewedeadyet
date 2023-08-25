@@ -36,6 +36,10 @@
         </p>
     </div>
 
+    <div class="alert alert-danger" role="alert">
+        &#x26A0;  Johns Hopkins Has Ceased Live COVID-19 Data Reporting as of March 10, 2023
+    </div>
+
     <div class="card">
         <div class="card-header">
             Countries to compare
@@ -90,8 +94,8 @@
         function getRewind(data, country) {
             var datasets = []
 
-            var years = ["2020", "2021", "2022"]
-            const colors = ['rgb(64, 128, 64)', 'rgb(128, 192, 128)', 'rgb(180, 255, 0)']
+            var years = ["2020", "2021", "2022", "2023"]
+            const colors = ['rgb(64, 128, 64)', 'rgb(128, 192, 128)', 'rgb(180, 255, 0)', 'rgb(128, 128, 128)']
             var ranges = []
 
             for (var i = 0; i < labels.length; i++) {
@@ -99,8 +103,10 @@
                     ranges.push([0, i])
                 if(labels[i] == "2022-1-1")
                     ranges.push([ranges[0][1], i])
+                if(labels[i] == "2023-1-1")
+                    ranges.push([ranges[1][1], i])
             }
-            ranges.push([ranges[1][1], labels.length])
+            ranges.push([ranges[2][1], labels.length])
             
             var pad = new Array(20).fill(0)
             var allIncidences = getIncidence(data, country).map(x => x.toFixed(2))
